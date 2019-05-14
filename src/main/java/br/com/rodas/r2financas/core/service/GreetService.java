@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package br.com.rodas.r2financas.core;
+package br.com.rodas.r2financas.core.service;
 
 import java.util.Collections;
 
@@ -53,7 +53,7 @@ public class GreetService implements Service {
 
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Collections.emptyMap());
 
-    GreetService(Config config) {
+    public GreetService(Config config) {
         this.greeting = config.get("app.greeting").asString().orElse("Ciao");
     }
 

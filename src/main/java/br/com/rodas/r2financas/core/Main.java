@@ -19,9 +19,12 @@ package br.com.rodas.r2financas.core;
 import java.io.IOException;
 import java.util.logging.LogManager;
 
+import br.com.rodas.r2financas.core.service.GreetService;
+import br.com.rodas.r2financas.core.service.IncomeService;
 import io.helidon.config.Config;
 import io.helidon.health.HealthSupport;
 import io.helidon.health.checks.HealthChecks;
+import io.helidon.media.jackson.server.JacksonSupport;
 import io.helidon.media.jsonp.server.JsonSupport;
 import io.helidon.metrics.MetricsSupport;
 import io.helidon.webserver.Routing;
@@ -36,10 +39,12 @@ public final class Main {
     /**
      * Cannot be instantiated.
      */
-    private Main() { }
+    private Main() {
+    }
 
     /**
      * Application main entry point.
+     * 
      * @param args command line arguments.
      * @throws IOException if there are problems reading logging properties
      */
@@ -49,6 +54,7 @@ public final class Main {
 
     /**
      * Start the server.
+     * 
      * @return the created {@link WebServer} instance
      * @throws IOException if there are problems reading logging properties
      */
@@ -58,7 +64,6 @@ public final class Main {
         LogManager.getLogManager().readConfiguration(
                 Main.class.getResourceAsStream("/logging.properties"));
 
-        // By default this will pick up application.yaml from the classpath
         Config config = Config.create();
 
         // Get webserver config from the "server" section of application.yaml
@@ -96,16 +101,21 @@ public final class Main {
     private static Routing createRouting(Config config) {
 
         MetricsSupport metrics = MetricsSupport.create();
-        GreetService greetService = new GreetService(config);
         HealthSupport health = HealthSupport.builder()
                 .add(HealthChecks.healthChecks())   // Adds a convenient set of checks
                 .build();
+        JacksonSupport jacksonSupport = JacksonSupport.create(); 
 
+        GreetService greetService = new GreetService(config);
+        IncomeService incomeService = new IncomeService(config);
+        
         return Routing.builder()
                 .register(JsonSupport.create())
                 .register(health)                   // Health at "/health"
                 .register(metrics)                  // Metrics at "/metrics"
+                .register(jacksonSupport)
                 .register("/greet", greetService)
+                .register("/income", incomeService)
                 .build();
     }
 
