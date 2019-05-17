@@ -19,6 +19,8 @@ package br.com.rodas.r2financas.core;
 import java.io.IOException;
 import java.util.logging.LogManager;
 
+import org.flywaydb.core.Flyway;
+
 import br.com.rodas.r2financas.core.service.GreetService;
 import br.com.rodas.r2financas.core.service.IncomeService;
 import io.helidon.config.Config;
@@ -49,7 +51,17 @@ public final class Main {
      * @throws IOException if there are problems reading logging properties
      */
     public static void main(final String[] args) throws IOException {
+        startDataBaseMigration();
         startServer();
+    }
+
+    private static void startDataBaseMigration() {
+        Flyway flyway = Flyway.configure()
+            .dataSource("jdbc:h2:~/test;MODE=PostgreSQL", "sa", "")
+            .schemas("rodrigopizzi@gmail.com")
+            .load();
+        
+        flyway.migrate();
     }
 
     /**
