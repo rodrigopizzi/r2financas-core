@@ -2,8 +2,11 @@ package br.com.rodas.r2financas.core.dao;
 
 import br.com.rodas.r2financas.core.domain.Income;
 
+/** Responsible for database access for Income records. */
 public interface IncomeDao {
-
-	void save(Income income);
-
+    /**
+     * Create new Income record.
+     * @param income Income record
+     */
+    void save(Income income);
 }

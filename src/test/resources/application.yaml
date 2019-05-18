@@ -1,4 +1,4 @@
-# PRODUCTION SCOPE
+# TEST SCOPE
 database:
   url: "jdbc:h2:~/test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
   username: "sa"

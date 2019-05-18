@@ -1,27 +1,8 @@
-/*
- * Copyright (c) 2018, 2019 Oracle and/or its affiliates. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package br.com.rodas.r2financas.core;
 
 import java.io.IOException;
 import java.util.logging.LogManager;
-
 import org.flywaydb.core.Flyway;
-
-import br.com.rodas.r2financas.core.service.GreetService;
 import br.com.rodas.r2financas.core.service.IncomeService;
 import io.helidon.config.Config;
 import io.helidon.health.HealthSupport;
@@ -34,101 +15,94 @@ import io.helidon.webserver.ServerConfiguration;
 import io.helidon.webserver.WebServer;
 
 /**
- * Simple Hello World rest application.
+ * Entrypoint for core application.
+ * @author Rodrigo Pizzi Argentato
  */
 public final class Main {
 
-    /**
-     * Cannot be instantiated.
-     */
+    /** Cannot be instantiated. */
     private Main() {
     }
 
     /**
      * Application main entry point.
-     * 
      * @param args command line arguments.
      * @throws IOException if there are problems reading logging properties
      */
     public static void main(final String[] args) throws IOException {
-        startDataBaseMigration();
         startServer();
     }
 
-    private static void startDataBaseMigration() {
+    /**
+     * Run databasemigration with Flyway.
+     * @param config application.yaml inside resources package
+     */
+    private static void startDataBaseMigration(final Config config) {
+        String jdbcUrl = config.get("database.url").asString().get();
+        String databaseUsername =
+                config.get("database.username").asString().get();
+        String databasePassword =
+                config.get("database.password").asString().get();
+
         Flyway flyway = Flyway.configure()
-            .dataSource("jdbc:h2:~/test;MODE=PostgreSQL", "sa", "")
-            .schemas("rodrigopizzi@gmail.com")
-            .load();
-        
+                .dataSource(jdbcUrl, databaseUsername, databasePassword)
+                .schemas("rodrigopizzi@gmail.com").load();
+
         flyway.migrate();
     }
 
     /**
      * Start the server.
-     * 
      * @return the created {@link WebServer} instance
      * @throws IOException if there are problems reading logging properties
      */
     static WebServer startServer() throws IOException {
-
-        // load logging configuration
         LogManager.getLogManager().readConfiguration(
                 Main.class.getResourceAsStream("/logging.properties"));
 
         Config config = Config.create();
 
-        // Get webserver config from the "server" section of application.yaml
+        startDataBaseMigration(config);
+
         ServerConfiguration serverConfig =
                 ServerConfiguration.create(config.get("server"));
 
-        WebServer server = WebServer.create(serverConfig, createRouting(config));
+        WebServer server =
+                WebServer.create(serverConfig, createRouting(config));
 
-        // Try to start the server. If successful, print some info and arrange to
-        // print a message at shutdown. If unsuccessful, print the exception.
-        server.start()
-            .thenAccept(ws -> {
-                System.out.println(
-                        "WEB server is up! http://localhost:" + ws.port() + "/greet");
-                ws.whenShutdown().thenRun(()
-                    -> System.out.println("WEB server is DOWN. Good bye!"));
-                })
-            .exceptionally(t -> {
-                System.err.println("Startup failed: " + t.getMessage());
-                t.printStackTrace(System.err);
-                return null;
-            });
-
-        // Server threads are not daemon. No need to block. Just react.
+        server.start().thenAccept(ws -> {
+            System.out.println("WEB server is up! http://localhost:" + ws.port()
+                    + "/greet");
+            ws.whenShutdown().thenRun(
+                    () -> System.out.println("WEB server is DOWN. Good bye!"));
+        }).exceptionally(t -> {
+            System.err.println("Startup failed: " + t.getMessage());
+            t.printStackTrace(System.err);
+            return null;
+        });
 
         return server;
     }
 
     /**
      * Creates new {@link Routing}.
-     *
-     * @return routing configured with JSON support, a health check, and a service
+     * @return routing configured with JSON support, a health check, and a
+     *         service
      * @param config configuration of this server
      */
-    private static Routing createRouting(Config config) {
+    private static Routing createRouting(final Config config) {
 
         MetricsSupport metrics = MetricsSupport.create();
         HealthSupport health = HealthSupport.builder()
-                .add(HealthChecks.healthChecks())   // Adds a convenient set of checks
-                .build();
-        JacksonSupport jacksonSupport = JacksonSupport.create(); 
+                .add(HealthChecks.healthChecks()).build();
+        JacksonSupport jacksonSupport = JacksonSupport.create();
 
-        GreetService greetService = new GreetService(config);
-        IncomeService incomeService = new IncomeService(config);
-        
-        return Routing.builder()
-                .register(JsonSupport.create())
-                .register(health)                   // Health at "/health"
-                .register(metrics)                  // Metrics at "/metrics"
-                .register(jacksonSupport)
-                .register("/greet", greetService)
-                .register("/income", incomeService)
-                .build();
+        /* Business Services */
+        IncomeService incomeService = new IncomeService();
+
+        return Routing.builder().register(JsonSupport.create()).register(health)
+                .register(metrics).register(jacksonSupport)
+                .register("/income", incomeService).build();
     }
 
 }
