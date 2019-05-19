@@ -1,5 +1,7 @@
 package br.com.rodas.r2financas.core.service;
 
+import java.sql.SQLException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.com.rodas.r2financas.core.dao.IncomeDao;
 import br.com.rodas.r2financas.core.dao.IncomeDaoDefaultImpl;
@@ -25,7 +27,8 @@ public class IncomeService implements Service {
 
     @Override
     public final void update(final Rules rules) {
-        rules.post("/", Handler.create(Income.class, this::create));
+        rules.post("/", Handler.create(Income.class, this::create)).get("/{id}",
+                this::findById);
     }
 
     /**
@@ -37,10 +40,28 @@ public class IncomeService implements Service {
     private void create(final ServerRequest request,
             final ServerResponse response, final Income income) {
 
-        LOG.info(income.getDescription());
-        incomeDao.save(income);
-        response.status(Http.Status.OK_200).send();
+        try {
+            Income newIncome = incomeDao.save(income);
+            response.status(Http.Status.OK_200);
+            response.send(newIncome);
+        } catch (SQLException e) {
+            LOG.log(Level.SEVERE, "Cannot insert Income", e);
+            response.status(Http.Status.INTERNAL_SERVER_ERROR_500).send();
+        }
+    }
 
+    /**
+     * Find Income by ID.
+     * @param request  ServerRequest
+     * @param response ServerResponse
+     */
+    private void findById(final ServerRequest request,
+            final ServerResponse response) {
+        String id = request.path().param("id");
+        long idIncome = Long.parseLong(id);
+
+        Income income = incomeDao.findById(idIncome);
+        response.send(income);
     }
 
 }

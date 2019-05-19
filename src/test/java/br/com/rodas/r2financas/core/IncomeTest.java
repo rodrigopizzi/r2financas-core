@@ -2,18 +2,18 @@ package br.com.rodas.r2financas.core;
 
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.concurrent.TimeUnit;
-import java.net.URL;
 import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import br.com.rodas.r2financas.core.domain.Income;
 import io.helidon.common.http.Http;
 import io.helidon.webserver.WebServer;
 import io.netty.handler.codec.http.HttpMethod;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import br.com.rodas.r2financas.core.domain.Income;
 
 /**
  * Testing all operations for income.
@@ -67,14 +67,26 @@ public class IncomeTest {
     public void testCreate() throws Exception {
         HttpURLConnection conn = getURLConnection(HttpMethod.POST, "/income");
 
-        Income income = new Income(0L, "Dinner", new BigDecimal("12.95"));
+        Income income = new Income(0L, "Salary", new BigDecimal("3517.99"));
 
         OutputStream os = conn.getOutputStream();
         os.write(mapper.writeValueAsString(income).getBytes());
         os.close();
 
+        String result = new String(conn.getInputStream().readAllBytes());
+        Income newIncome = mapper.readValue(result, Income.class);
+        income.setIdIncome(newIncome.getIdIncome());
         Assertions.assertEquals(Http.Status.OK_200.code(),
                 conn.getResponseCode(), "Created new income record");
+        Assertions.assertTrue(newIncome.getIdIncome() > 0,
+                "New income must have informed id");
+
+        conn = getURLConnection(HttpMethod.GET,
+                "/income/" + newIncome.getIdIncome());
+        result = new String(conn.getInputStream().readAllBytes());
+        newIncome = mapper.readValue(result, Income.class);
+        Assertions.assertEquals(income, newIncome,
+                "Load this instance of income and compares with the previous");
     }
 
     /**

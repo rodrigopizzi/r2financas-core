@@ -3,6 +3,7 @@ package br.com.rodas.r2financas.core.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +20,7 @@ public class IncomeDaoDefaultImpl implements IncomeDao {
             Logger.getLogger(IncomeDaoDefaultImpl.class.getName());
 
     @Override
-    public final void save(final Income income) {
+    public final Income save(final Income income) throws SQLException {
         final String insert =
                 "insert into income" + " (idincome, description, value)"
                         + " values (nextval('seq_income'), ?, ?)";
@@ -39,11 +40,41 @@ public class IncomeDaoDefaultImpl implements IncomeDao {
                 }
 
                 LOG.log(Level.INFO, "Created: " + income);
+                return income;
+            }
+        } catch (SQLException e) {
+            LOG.log(Level.SEVERE,
+                    "Cannot insert income record: " + income.toString(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public final Income findById(final long idIncome) {
+        final String query = "select idincome, description, value"
+                + " from income where idincome = ?";
+
+        try (Connection con = DataSource.getConnection()) {
+            try (PreparedStatement ps = con.prepareStatement(query)) {
+                int parameterIndex = 1;
+                ps.setLong(parameterIndex++, idIncome);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return null;
+                    }
+                    Income income = new Income(rs.getLong("idincome"),
+                            rs.getString("description"),
+                            rs.getBigDecimal("value"));
+
+                    return income;
+                }
             }
         } catch (Exception e) {
-            LOG.log(Level.INFO, income.toString());
-            LOG.log(Level.SEVERE, "Cannot insert income record", e);
+            LOG.log(Level.SEVERE, "Cannot load Income by id = " + idIncome, e);
         }
+
+        return null;
     }
 
 }
