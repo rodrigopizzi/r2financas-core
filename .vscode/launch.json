@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Main",
+            "request": "launch",
+            "mainClass": "br.com.rodas.r2financas.core.Main",
+            "projectName": "r2financas-core"
+        }
+    ]
+}

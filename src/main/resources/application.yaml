@@ -1,8 +1,9 @@
 # PRODUCTION SCOPE
 database:
-  url: "jdbc:h2:~/test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
+  url: "jdbc:h2:~/r2db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
   username: "sa"
   password: ""
+  schema: "main"
 
 server:
   port: 8080

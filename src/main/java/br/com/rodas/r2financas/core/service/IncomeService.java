@@ -19,28 +19,25 @@ import io.helidon.webserver.Service;
 public class IncomeService implements Service {
 
     /** Logger for this instance. */
-    private static final Logger LOG =
-            Logger.getLogger(IncomeService.class.getName());
-
-    /** Dao for Income. */
-    private IncomeDao incomeDao = new IncomeDaoDefaultImpl();
+    private static final Logger LOG = Logger.getLogger(IncomeService.class.getName());
 
     @Override
     public final void update(final Rules rules) {
-        rules.post("/", Handler.create(Income.class, this::create)).get("/{id}",
-                this::findById);
+        rules.post("/", Handler.create(Income.class, this::create)).get("/{id}", this::findById);
     }
 
     /**
      * Create a new Income.
+     * 
      * @param request  ServerRequest
      * @param response ServerResponse
      * @param income   Income operation
      */
-    private void create(final ServerRequest request,
-            final ServerResponse response, final Income income) {
+    private void create(final ServerRequest request, final ServerResponse response,
+            final Income income) {
 
         try {
+            IncomeDao incomeDao = new IncomeDaoDefaultImpl();
             Income newIncome = incomeDao.save(income);
             response.status(Http.Status.OK_200);
             response.send(newIncome);
@@ -52,11 +49,13 @@ public class IncomeService implements Service {
 
     /**
      * Find Income by ID.
+     * 
      * @param request  ServerRequest
      * @param response ServerResponse
      */
-    private void findById(final ServerRequest request,
-            final ServerResponse response) {
+    private void findById(final ServerRequest request, final ServerResponse response) {
+        IncomeDao incomeDao = new IncomeDaoDefaultImpl();
+
         String id = request.path().param("id");
         long idIncome = Long.parseLong(id);
 

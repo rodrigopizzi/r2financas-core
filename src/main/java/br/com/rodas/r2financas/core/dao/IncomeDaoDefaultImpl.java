@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import br.com.rodas.r2financas.core.DataSource;
+import br.com.rodas.r2financas.core.datasource.DataSource;
 import br.com.rodas.r2financas.core.domain.Income;
 
 /**
@@ -16,18 +16,16 @@ import br.com.rodas.r2financas.core.domain.Income;
 public class IncomeDaoDefaultImpl implements IncomeDao {
 
     /** Logger for this instance. */
-    private static final Logger LOG =
-            Logger.getLogger(IncomeDaoDefaultImpl.class.getName());
+    private static final Logger LOG = Logger.getLogger(IncomeDaoDefaultImpl.class.getName());
 
     @Override
     public final Income save(final Income income) throws SQLException {
-        final String insert =
-                "insert into income" + " (idincome, description, value)"
-                        + " values (nextval('seq_income'), ?, ?)";
+        final String insert = "insert into income" + " (idincome, description, value)"
+                + " values (nextval('seq_income'), ?, ?)";
 
         try (Connection con = DataSource.getConnection()) {
-            try (PreparedStatement ps = con.prepareStatement(insert,
-                    Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps =
+                    con.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
                 int parameterIndex = 1;
                 ps.setString(parameterIndex++, income.getDescription());
                 ps.setBigDecimal(parameterIndex++, income.getValue());
@@ -43,16 +41,15 @@ public class IncomeDaoDefaultImpl implements IncomeDao {
                 return income;
             }
         } catch (SQLException e) {
-            LOG.log(Level.SEVERE,
-                    "Cannot insert income record: " + income.toString(), e);
+            LOG.log(Level.SEVERE, "Cannot insert income record: " + income.toString(), e);
             throw e;
         }
     }
 
     @Override
     public final Income findById(final long idIncome) {
-        final String query = "select idincome, description, value"
-                + " from income where idincome = ?";
+        final String query =
+                "select idincome, description, value" + " from income where idincome = ?";
 
         try (Connection con = DataSource.getConnection()) {
             try (PreparedStatement ps = con.prepareStatement(query)) {
@@ -63,8 +60,7 @@ public class IncomeDaoDefaultImpl implements IncomeDao {
                     if (!rs.next()) {
                         return null;
                     }
-                    Income income = new Income(rs.getLong("idincome"),
-                            rs.getString("description"),
+                    Income income = new Income(rs.getLong("idincome"), rs.getString("description"),
                             rs.getBigDecimal("value"));
 
                     return income;

@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpMethod;
 
 /**
  * Testing all operations for income.
+ * 
  * @author Rodrigo Pizzi Argentato
  */
 public class IncomeTest {
@@ -28,10 +29,13 @@ public class IncomeTest {
 
     /**
      * Started webserver and keeped alive until testing done.
+     * 
      * @throws Exception Occurs when webserver cannot start
      */
     @BeforeAll
     public static void startTheServer() throws Exception {
+        DatabaseMigrationTest.migrate();
+
         webServer = Main.startServer();
 
         final long timeout = 2000;
@@ -48,19 +52,20 @@ public class IncomeTest {
 
     /**
      * Shut downed webserver.
+     * 
      * @throws Exception Occurs when webserver cannot stop
      */
     @AfterAll
     public static void stopServer() throws Exception {
         if (webServer != null) {
             final int seconds = 10;
-            webServer.shutdown().toCompletableFuture().get(seconds,
-                    TimeUnit.SECONDS);
+            webServer.shutdown().toCompletableFuture().get(seconds, TimeUnit.SECONDS);
         }
     }
 
     /**
      * Ensures that income operation is created.
+     * 
      * @throws Exception Occurs when income operation get abnormal execution
      */
     @Test
@@ -76,13 +81,11 @@ public class IncomeTest {
         String result = new String(conn.getInputStream().readAllBytes());
         Income newIncome = mapper.readValue(result, Income.class);
         income.setIdIncome(newIncome.getIdIncome());
-        Assertions.assertEquals(Http.Status.OK_200.code(),
-                conn.getResponseCode(), "Created new income record");
-        Assertions.assertTrue(newIncome.getIdIncome() > 0,
-                "New income must have informed id");
+        Assertions.assertEquals(Http.Status.OK_200.code(), conn.getResponseCode(),
+                "Created new income record");
+        Assertions.assertTrue(newIncome.getIdIncome() > 0, "New income must have informed id");
 
-        conn = getURLConnection(HttpMethod.GET,
-                "/income/" + newIncome.getIdIncome());
+        conn = getURLConnection(HttpMethod.GET, "/income/" + newIncome.getIdIncome());
         result = new String(conn.getInputStream().readAllBytes());
         newIncome = mapper.readValue(result, Income.class);
         Assertions.assertEquals(income, newIncome,
@@ -91,13 +94,14 @@ public class IncomeTest {
 
     /**
      * Connects to a specified URL.
+     * 
      * @param method HTTP method like POST, GET, PUT, etc
      * @param path   Path of operation
      * @return {@link HttpURLConnection} for HTTP connection
      * @throws Exception Occurs when something is wrong with the URL and method
      */
-    private HttpURLConnection getURLConnection(final HttpMethod method,
-            final String path) throws Exception {
+    private HttpURLConnection getURLConnection(final HttpMethod method, final String path)
+            throws Exception {
         URL url = new URL("http://localhost:" + webServer.port() + path);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method.name());

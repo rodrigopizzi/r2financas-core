@@ -1,8 +1,9 @@
 # TEST SCOPE
 database:
-  url: "jdbc:h2:~/test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
+  url: "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS test"
   username: "sa"
   password: ""
+  schema: "test"
 
 server:
   port: 8080

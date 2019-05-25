@@ -1,4 +1,4 @@
-package br.com.rodas.r2financas.core;
+package br.com.rodas.r2financas.core.datasource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,6 +22,7 @@ public final class DataSource {
 
     /**
      * Request connection with database for connection pool.
+     * 
      * @return {@Connection} Connection for database
      * @throws SQLException Occurs when cannot establish connection
      */
@@ -30,15 +31,14 @@ public final class DataSource {
             Config appConfig = Config.create();
 
             String jdbcUrl = appConfig.get("database.url").asString().get();
-            String databaseUsername =
-                    appConfig.get("database.username").asString().get();
-            String databasePassword =
-                    appConfig.get("database.password").asString().get();
+            String databaseUsername = appConfig.get("database.username").asString().get();
+            String databasePassword = appConfig.get("database.password").asString().get();
+            String schema = appConfig.get("database.schema").asString().get();
 
             config.setJdbcUrl(jdbcUrl);
             config.setUsername(databaseUsername);
             config.setPassword(databasePassword);
-            config.setSchema("rodrigopizzi@gmail.com");
+            config.setSchema(schema);
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
